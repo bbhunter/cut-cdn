@@ -391,16 +391,28 @@ func readInput(isSilent bool, input string) []string {
 func checkUpdate(isSilent bool) {
 	// Check Updates
 	resp, err := http.Get("https://github.com/ImAyrix/cut-cdn")
-	checkError(err)
+	if checkError(err) {
+		return
+	}
+	defer resp.Body.Close()
 
 	respByte, err := io.ReadAll(resp.Body)
-	checkError(err)
+	if checkError(err) {
+		return
+	}
 	body := string(respByte)
 
 	re, e := regexp.Compile(`cut-cdn\s+v(\d\.\d\.\d+)`)
-	checkError(e)
+	if checkError(e) {
+		return
+	}
 
-	if re.FindStringSubmatch(body)[1] != VERSION {
+	match := re.FindStringSubmatch(body)
+	if len(match) < 2 {
+		return
+	}
+
+	if match[1] != VERSION {
 		printText(isSilent, "", "Print")
 		printText(isSilent, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", "Print")
 		printText(isSilent, fmt.Sprintf("|    %v🔥  Please update Cut-CDN!%v                                      |", colorGreen, colorReset), "Print")
